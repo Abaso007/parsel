@@ -33,19 +33,18 @@ def min_spanning_tree(cost_matrix):
     m = len(cost_matrix[0])
     if n != m:
         raise Exception("The cost matrix is not symmetric")
-    adjacency_matrix = [[0] * n for i in range(n)]
+    adjacency_matrix = [[0] * n for _ in range(n)]
     # Start with the first vertex.
     visited = [0]
     while len(visited) < n:
         min_cost = sys.maxsize
         min_edge = None
-        for vertex in visited:
-            for i in range(n):
-                if i in visited:
-                    continue
-                if cost_matrix[vertex][i] < min_cost:
-                    min_cost = cost_matrix[vertex][i]
-                    min_edge = (vertex, i)
+        for vertex, i in product(visited, range(n)):
+            if i in visited:
+                continue
+            if cost_matrix[vertex][i] < min_cost:
+                min_cost = cost_matrix[vertex][i]
+                min_edge = (vertex, i)
         adjacency_matrix[min_edge[0]][min_edge[1]] = 1
         adjacency_matrix[min_edge[1]][min_edge[0]] = 1
         visited.append(min_edge[1])
@@ -58,21 +57,17 @@ def find_connected_cities(adj_matrix):
     lastRow = adj_matrix[finalNode-1]
     count = 0
     connectedCities = []
-    for i in range(0, len(lastRow)):
+    for i in range(len(lastRow)):
         if lastRow[i] == 1:
             connectedCities.append(i)
             count += 1
-    if count == 1:
-        return []
-    else:
-        return connectedCities
+    return [] if count == 1 else connectedCities
 
 # given a matrix representing the cost of building a road between any two cities, and a list representing the cost of building an airport in a city (where any two cities with airports are connected), return a list of the cities that should have airports built in them to minimize the total cost of building roads and airports such that all cities are connected. The list should be sorted in ascending order.
 def min_cost_airports(cost_matrix, airport_costs):
     cost_matrix = add_sky_node(cost_matrix, airport_costs)
     adj_matrix = min_spanning_tree(cost_matrix)
-    connected_cities = find_connected_cities(adj_matrix)
-    return connected_cities
+    return find_connected_cities(adj_matrix)
 
 
 assert find_connected_cities([[0,1,0,0],[0,0,1,0],[0,0,0,1],[0,0,0,0]]) == []

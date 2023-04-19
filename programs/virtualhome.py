@@ -5,10 +5,10 @@ def task_plan():
 # return a list of strings that represents an action plan to put an object in a place.
 def put_object_on(object, place):
     return [
-        'find ' + object,
-        'grab ' + object,
-        'walk to ' + place,
-        'put ' + object + ' on ' + place
+        f'find {object}',
+        f'grab {object}',
+        f'walk to {place}',
+        f'put {object} on {place}',
     ]
 
 

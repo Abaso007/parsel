@@ -16,10 +16,7 @@ def initial_node(line, cur_node):
 def fill_graph(node, node_equiv, defined_fns=None, scope=None):
     if defined_fns is None:
         defined_fns = {}
-    if scope is None:
-        scope = set()
-    else:
-        scope = scope.copy()
+    scope = set() if scope is None else scope.copy()
     scope.add(node['name'])
     child_equivs = []
     for child in node['children']:
@@ -121,10 +118,12 @@ def strongly_connected_components(defined_fns, consider_asserts=True):
         remaining_nodes.remove(fn_name)
         scc = {fn_name}
         for child_name in reachable[fn_name]:
-            if fn_name in reachable[child_name]:
-                if child_name in remaining_nodes:
-                    scc.add(child_name)
-                    remaining_nodes.remove(child_name)
+            if (
+                fn_name in reachable[child_name]
+                and child_name in remaining_nodes
+            ):
+                scc.add(child_name)
+                remaining_nodes.remove(child_name)
         sccs.append(scc)
 
     # Identify the relationships between the strongly connected components

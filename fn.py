@@ -11,10 +11,7 @@ class Function:
         if "default_prefix" in CONSTS:
             prefix = prefix + CONSTS["default_prefix"]
         self.prefix = prefix
-        if parent is None:
-            self.parents = []
-        else:
-            self.parents = [parent]
+        self.parents = [] if parent is None else [parent]
         self.asserts = asserts
         self.children = []
         self.implementations = []
@@ -49,8 +46,9 @@ class Function:
                 base_str += CONSTS["desc_helper"](self.desc)
         if self.ret and ', '.join(self.ret):
             base_str += CONSTS["ret_helper"].format(ret=', '.join(self.ret))
-        other_children = [child for child in self.children if child.name != self.name]
-        if other_children:
+        if other_children := [
+            child for child in self.children if child.name != self.name
+        ]:
             base_str += CONSTS["use_helper"].format(
                 uses=', '.join([child.name for child in other_children]))
         base_str += f"{self.header()}:\n"
@@ -94,10 +92,7 @@ assert"""
     # Call code model and optionally filter the results
     # Generate implementations for the function
     def implement(self, codex, num_completions=None):
-        if 'max_tokens' in CONSTS:
-            max_tokens = CONSTS['max_tokens']
-        else:
-            max_tokens = 500
+        max_tokens = CONSTS['max_tokens'] if 'max_tokens' in CONSTS else 500
         if num_completions is None:
             num_completions = CONSTS['num_completions']
         self.implementations = codex.generate(
@@ -131,7 +126,7 @@ assert"""
             require=None,
             cache_key=None,
         )
-        tests = set([test[0] for test in tests if test])
+        tests = {test[0] for test in tests if test}
         self.asserts = tests
         return tests
 
@@ -171,9 +166,8 @@ assert"""
                 new_desc.append(self.name + line)
                 if line.strip().endswith('.'):
                     break
-                else:
-                    first_line = False
-                    continue
+                first_line = False
+                continue
             if not line.strip():
                 break
             if line.strip().endswith('.'):
@@ -252,11 +246,7 @@ assert"""
     # Identify functions that are defined by multiple children
     # and move the definition to self
     def rearrange(self, already_defined=None):
-        if already_defined is None:
-            already_defined = set()
-        else:
-            already_defined = already_defined.copy()
-
+        already_defined = set() if already_defined is None else already_defined.copy()
         # Note that we have defined self and its children
         already_defined.add(self.name)
         for child in self.children:
@@ -291,15 +281,14 @@ assert"""
             already_defined = {self.name}
         else:
             already_defined = already_defined.copy()
-        outputs = self.ret
         desc = self.desc
         cur_str = f"{self.name}({', '.join(self.args)})"
-        if outputs:
+        if outputs := self.ret:
             if override_names:
                 if len(outputs) == 1:
                     outputs = "res"
                 else:
-                    outputs = ", ".join(["res" + str(i) for i, _ in enumerate(outputs)])
+                    outputs = ", ".join([f"res{str(i)}" for i, _ in enumerate(outputs)])
             else:
                 outputs = ", ".join(outputs)
             output_str = f' -> {outputs}'
@@ -307,7 +296,7 @@ assert"""
             output_str = ""
         cur_str += output_str
         if desc:
-            cur_str += ": " + desc
+            cur_str += f": {desc}"
         cur_str += '\n'
         if include_asserts and self.asserts:
             cur_str += '\n'.join(self.asserts) + '\n'
@@ -337,10 +326,7 @@ assert"""
         return f"Function({self.name}({self.args}){ret_str}); parents: {parent_names}; children: {child_name})"
 
 def indent_str(s, n=2):
-    indented_str = ""
-    for line in s.splitlines():
-        indented_str += ' ' * n + line + '\n'
-    return indented_str
+    return "".join(' ' * n + line + '\n' for line in s.splitlines())
 
 def get_function_from_examples(missing_fn_name, examples, parent, codex, include_rets=False):
     examples_str = "\n".join(CONSTS['example_helper'].format(
@@ -402,11 +388,8 @@ def find_str(line, target):
             curly_count += 1
         elif c == "}":
             curly_count -= 1
-        elif c == "\"" or c == "'":
-            if in_string == c:
-                in_string = None
-            else:
-                in_string = c
+        elif c in ["\"", "'"]:
+            in_string = None if in_string == c else c
         elif c == target and paren_count == 0 and bracket_count == 0 and curly_count == 0 and in_string is None:
             return i
     return -1

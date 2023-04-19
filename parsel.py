@@ -316,7 +316,10 @@ def multiprocess_fill(scc, dependencies_str, defined_fns, all_implementations, a
         for implementation_set_indices in implementation_sets:
             # We need to convert the implementation set indices to the actual implementation_set
             implementation_set = [all_implementation_sets[i][impl_id] for i, impl_id in enumerate(implementation_set_indices)]
-            if (not (time.time() - start_time > min_time and submitted > min_attempts)) and ((time.time() - start_time) < max_time):
+            if (
+                time.time() - start_time <= min_time
+                or submitted <= min_attempts
+            ) and (time.time() - start_time) < max_time:
                 try:
                     # Check for syntax errors
                     # CONSTS['exec'](to_implementation_str(implementation_set, dependencies_str))
@@ -355,7 +358,7 @@ def multiprocess_fill(scc, dependencies_str, defined_fns, all_implementations, a
 
         # When we have exhausted all the implementation sets, we can try reattempting the best attempt
         # If we are debugging, even in 'best' mode, we want to stop at this point
-        if len(all_attempts) == 0:
+        if not all_attempts:
             kill_remaining_futures(executor, futures)
             raise Exception("No implementations found")
         best_attempt = max(all_attempts.values())
@@ -368,7 +371,6 @@ def multiprocess_fill(scc, dependencies_str, defined_fns, all_implementations, a
             else:
                 # Print the most recent attempt
                 print("\n".join(implementation_set))
-                pass
             print(asserts_str)
             breakpoint()
 
@@ -379,7 +381,7 @@ def multiprocess_fill(scc, dependencies_str, defined_fns, all_implementations, a
             return implementation_attempt
         except Exception as e:
             print("Error:", e)
-        
+
         # Note that the repetitiveness of kill_remaining_futures is intentional
         # If we do it outside the loop, we have the unfortunate situation where
         # sometimes we get stuck in the executor context, and the futures never get cancelled.
@@ -491,10 +493,20 @@ def implement_scc(scc_idx, sccs, implemented_sccs, scc_edges, defined_fns, codeg
     print("Implementing SCC", scc_idx, sccs[scc_idx])
     if scc_idx in implemented_sccs:
         return implemented_sccs[scc_idx]
-    dependencies_str = ""
-    for edge in scc_edges[scc_idx]:
-        dependencies_str += implement_scc(edge, sccs, implemented_sccs, scc_edges, defined_fns, codegen, allow_autofill, should_expand, debug)
-
+    dependencies_str = "".join(
+        implement_scc(
+            edge,
+            sccs,
+            implemented_sccs,
+            scc_edges,
+            defined_fns,
+            codegen,
+            allow_autofill,
+            should_expand,
+            debug,
+        )
+        for edge in scc_edges[scc_idx]
+    )
     num_completions = CONSTS["min_completions"] if "min_completions" in CONSTS else CONSTS["num_completions"]
     error = None
     # We exponentially increase the number of completions until we reach the max, "num_completions"
@@ -510,18 +522,29 @@ def implement_scc(scc_idx, sccs, implemented_sccs, scc_edges, defined_fns, codeg
             # We support a "sample only" mode, where we don't actually
             # implement the SCC, but just try to run inference.
             # This let's us parallelize inference and implementation.
-            if not sample_only:
-                new_str = dependencies_str + eval_scc(
-                    sccs[scc_idx], dependencies_str, defined_fns, codegen, allow_autofill, should_expand, debug, seed=seed, backtrack=False)
-            else:
-                new_str = dependencies_str
+            new_str = (
+                dependencies_str
+                if sample_only
+                else dependencies_str
+                + eval_scc(
+                    sccs[scc_idx],
+                    dependencies_str,
+                    defined_fns,
+                    codegen,
+                    allow_autofill,
+                    should_expand,
+                    debug,
+                    seed=seed,
+                    backtrack=False,
+                )
+            )
             implemented_sccs[scc_idx] = new_str
             return new_str
         except KeyboardInterrupt:
             raise KeyboardInterrupt
         except Exception as e:
             error = e
-            print("Error", e)
+            print("Error", error)
         num_completions *= 2
     if backtrack:
         # Backtracking allows us to try new implementations
@@ -548,9 +571,7 @@ def fns_to_str(fn, written):
     if fn.name in written:
         return ""
     written.add(fn.name)
-    total_str = ""
-    for child in fn.children:
-        total_str += fns_to_str(child, written)
+    total_str = "".join(fns_to_str(child, written) for child in fn.children)
     return total_str + CONSTS['full_fn_str'].format(
         desc=fn.desc, fn_impl=fn.fixed_implementation)
 
@@ -564,20 +585,19 @@ def write_to_file(filename, defined_fns):
     fn_defs = fns_to_str(defined_fns[root], set())
     asserts = "\n".join(fn.get_assert_str() for fn in defined_fns.values())
     if generate_tests:
-        # Remove duplicate asserts but keep the order
-        asserts_dict = {}
-        for assert_fn in asserts.split("\n"):
-            if assert_fn.strip() == "":
-                continue
-            asserts_dict[assert_fn] = True
+        asserts_dict = {
+            assert_fn: True
+            for assert_fn in asserts.split("\n")
+            if assert_fn.strip() != ""
+        }
         asserts = "\n".join(list(asserts_dict.keys()))
     assert CONSTS['exist_asserts'](asserts)
     exec_pre = CONSTS['exec_pre']
     contents = f"{exec_pre}{fn_defs}\n{asserts}"
     with open(filename, "w") as f:
-        print("Writing to " + str(filename))
+        print(f"Writing to {str(filename)}")
         f.write(contents)
-    print("Done writing to " + str(filename))
+    print(f"Done writing to {str(filename)}")
 
 
 # The key function of the program, which takes a function graph
@@ -642,10 +662,7 @@ if __name__ == "__main__":
 
     assert args.source_file.split(".")[-1] == 'ss'
     codegen = CodeGen(args.cache, args.key)
-    if args.best:
-        debug = 'best'
-    else:
-        debug = args.debug
+    debug = 'best' if args.best else args.debug
     generate_tests = args.generate_tests
     parsel(codegen, args.source_file, allow_autofill=args.allow_autofill, should_expand=args.allow_expand, debug=debug, add_name_and_args=args.add_name_and_args)
 else:

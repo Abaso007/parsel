@@ -23,11 +23,10 @@ def add_edge(graph, fr_id, rel, to_id):
 
 
 def find_nodes(graph, **kwargs):
-    if len(kwargs) == 0:
+    if not kwargs:
         return None
-    else:
-        k, v = next(iter(kwargs.items()))
-        return [n for n in graph['nodes'] if n[k] == v]
+    k, v = next(iter(kwargs.items()))
+    return [n for n in graph['nodes'] if n[k] == v]
 
 def setup():
     mode = 'auto' # auto / manual
@@ -36,8 +35,7 @@ def setup():
             exec_file = 'macos_exec.v2.3.0*'
         else:
             exec_file = 'linux_exec*.x86_64'
-        file_names = glob.glob(exec_file)
-        if len(file_names) > 0:
+        if file_names := glob.glob(exec_file):
             file_name = file_names[0]
             comm = UnityCommunication(file_name=file_name, port="8082", x_display="0")
         else:
@@ -83,14 +81,19 @@ def get_obj_id(obj, graph):
 
 def formalize_script(gen_script, graph):
     script = []
-    
+
     for l in gen_script:
         for acts_idx, acts in enumerate(NL_ACTIONS):
-            if all([a in l for a in acts]):
+            if all(a in l for a in acts):
                 for a in acts:
-                    l = l.replace(a + " ", "|")
+                    l = l.replace(f"{a} ", "|")
                 objects = l.split("|")[1:]
-                l = M_ACTIONS[acts_idx] + " " + " ".join(["<{}> ({})".format( obj.strip(), get_obj_id(obj.strip(), graph)) for obj in objects])
+                l = f"{M_ACTIONS[acts_idx]} " + " ".join(
+                    [
+                        f"<{obj.strip()}> ({get_obj_id(obj.strip(), graph)})"
+                        for obj in objects
+                    ]
+                )
                 break
         script.append(l)
     return script
@@ -148,7 +151,7 @@ def test_script(gen_script, strict = False):
         graph = init_graph(comm, graph)
         with open(cache_file, 'w') as f:
             json.dump(graph, f)
-    
+
 
     print(gen_script)
     # gen_script = ['grab cup', 'put cup on table', 'grab bread', 'put bread on desk']
@@ -157,8 +160,8 @@ def test_script(gen_script, strict = False):
     print(script)
     ### check soft execution via executor.find_solutions; mainly check whether stuff are possible to parse and execute in any way
     able_to_be_parsed, able_to_be_executed, final_state = check_executability( ", ".join(script), graph)
-    
-    
+
+
     print(able_to_be_parsed, able_to_be_executed)
     # assert able_to_be_parsed
     # assert able_to_be_executed
@@ -166,7 +169,7 @@ def test_script(gen_script, strict = False):
         return "not executable"
     if strict:
         ### execution check; too expensive for on the fly
-        script = ["<char0> " + s for s in script]
+        script = [f"<char0> {s}" for s in script]
         print(script)
         success, message = comm.render_script(script=script,
                                     processing_time_limit=60,

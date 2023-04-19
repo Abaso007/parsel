@@ -16,22 +16,17 @@ def game_of_life_iteration(array_at_time_t):
             # Get the number of active cells around the current cell
             active_cells_around_current_cell = get_number_of_active_cells_around_cell(row, column, array_at_time_t)
             # Check whether the current cell is active or inactive
-            if array_at_time_t[row][column] == 1:
-                # Check whether the current cell has two or three active cells around it
-                if active_cells_around_current_cell == 2 or active_cells_around_current_cell == 3:
-                    # Set the current cell to active for the next iteration
-                    array_at_time_t_plus_1_row.append(1)
-                else:
-                    # Set the current cell to inactive for the next iteration
-                    array_at_time_t_plus_1_row.append(0)
+            if (
+                array_at_time_t[row][column] == 1
+                and active_cells_around_current_cell in [2, 3]
+                or array_at_time_t[row][column] != 1
+                and active_cells_around_current_cell == 3
+            ):
+                # Set the current cell to active for the next iteration
+                array_at_time_t_plus_1_row.append(1)
             else:
-                # Check whether the current cell has three active cells around it
-                if active_cells_around_current_cell == 3:
-                    # Set the current cell to active for the next iteration
-                    array_at_time_t_plus_1_row.append(1)
-                else:
-                    # Set the current cell to inactive for the next iteration
-                    array_at_time_t_plus_1_row.append(0)
+                # Set the current cell to inactive for the next iteration
+                array_at_time_t_plus_1_row.append(0)
         # Add the row to the board for the next iteration
         array_at_time_t_plus_1.append(array_at_time_t_plus_1_row)
     # Return the next iteration of the game of life
@@ -42,10 +37,7 @@ def game_of_life_iteration(array_at_time_t):
 def array_inversion(array):
     for i in range(len(array)):
         for j in range(len(array[i])):
-            if array[i][j] == 1:
-                array[i][j] = 0
-            else:
-                array[i][j] = 1
+            array[i][j] = 0 if array[i][j] == 1 else 1
     return array
 
 # 
@@ -53,9 +45,14 @@ def get_number_of_active_cells_around_cell(row, column, array_at_time_t):
     active_cells_around_current_cell = 0
     for i in range(row - 1, row + 2):
         for j in range(column - 1, column + 2):
-            if i >= 0 and j >= 0 and i < len(array_at_time_t) and j < len(array_at_time_t[0]):
-                if array_at_time_t[i][j] == 1:
-                    active_cells_around_current_cell += 1
+            if (
+                i >= 0
+                and j >= 0
+                and i < len(array_at_time_t)
+                and j < len(array_at_time_t[0])
+                and array_at_time_t[i][j] == 1
+            ):
+                active_cells_around_current_cell += 1
     if array_at_time_t[row][column] == 1:
         active_cells_around_current_cell -= 1
     return active_cells_around_current_cell

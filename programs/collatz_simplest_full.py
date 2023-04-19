@@ -1,9 +1,6 @@
 # Calls base_case if 1, otherwise recursion_rule
 def collatz_recursion(num, cur_list=list()):
-    if num == 1:
-        return base_case(num, cur_list)
-    else:
-        return recursion_rule(num, cur_list)
+    return base_case(num, cur_list) if num == 1 else recursion_rule(num, cur_list)
 
 # Returns the list with the number appended to it
 def base_case(num, cur_list):

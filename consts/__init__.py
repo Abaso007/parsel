@@ -13,16 +13,15 @@ def assert_mode(target_mode):
     # ask the user if he wants to change the mode
     print(f'The current mode is {mode}, but the target mode is {target_mode}.')
     choice = input('Do you want to change the mode? [y/N]')
-    if choice == 'y':
-        # edit the file
-        with open(__file__, 'r') as f:
-            lines = f.readlines()
-        for i, line in enumerate(lines):
-            if line.startswith('mode ') or line.startswith('mode='):
-                lines[i] = f"mode = '{target_mode}'\n"
-                break
-        with open(__file__, 'w') as f:
-            f.writelines(lines)
-        raise RuntimeError(f'Mode changed to {target_mode}. Please restart the program.')
-    else:
-        raise RuntimeError(f'Incorrect mode.')
+    if choice != 'y':
+        raise RuntimeError('Incorrect mode.')
+    # edit the file
+    with open(__file__, 'r') as f:
+        lines = f.readlines()
+    for i, line in enumerate(lines):
+        if line.startswith('mode ') or line.startswith('mode='):
+            lines[i] = f"mode = '{target_mode}'\n"
+            break
+    with open(__file__, 'w') as f:
+        f.writelines(lines)
+    raise RuntimeError(f'Mode changed to {target_mode}. Please restart the program.')

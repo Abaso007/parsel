@@ -14,12 +14,12 @@ def game_of_life_iteration(array_at_time_t):
     array_at_time_t_plus_1 = []
 
     # Iterate through the rows of the array
-    for i in range(0, len(array_at_time_t)):
+    for i in range(len(array_at_time_t)):
         # The array that will contain the next row
         next_row = []
 
         # Iterate through the columns of the array
-        for j in range(0, len(array_at_time_t[i])):
+        for j in range(len(array_at_time_t[i])):
             # The number of neighbors
             num_neighbors = 0
 
@@ -31,24 +31,25 @@ def game_of_life_iteration(array_at_time_t):
                         continue
 
                     # Check if the neighbor is valid
-                    if i + k >= 0 and i + k < len(array_at_time_t) and j + l >= 0 and j + l < len(array_at_time_t[i]):
-                        # If the neighbor is alive, increment the number of neighbors
-                        if array_at_time_t[i + k][j + l] == 1:
-                            num_neighbors += 1
+                    if (
+                        i + k >= 0
+                        and i + k < len(array_at_time_t)
+                        and j + l >= 0
+                        and j + l < len(array_at_time_t[i])
+                        and array_at_time_t[i + k][j + l] == 1
+                    ):
+                        num_neighbors += 1
 
             # If the cell is alive, check if it should die
-            if array_at_time_t[i][j] == 1:
-                if num_neighbors < 2 or num_neighbors > 3:
-                    next_row.append(0)
-                else:
-                    next_row.append(1)
-            # If the cell is dead, check if it should become alive
+            if (
+                array_at_time_t[i][j] == 1
+                and (num_neighbors < 2 or num_neighbors > 3)
+                or array_at_time_t[i][j] != 1
+                and num_neighbors != 3
+            ):
+                next_row.append(0)
             else:
-                if num_neighbors == 3:
-                    next_row.append(1)
-                else:
-                    next_row.append(0)
-
+                next_row.append(1)
         # Add the next row to the array
         array_at_time_t_plus_1.append(next_row)
 
