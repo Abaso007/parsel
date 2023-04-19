@@ -93,7 +93,7 @@ def eval_fn(fn_str):
         exec(exec_imports + fn_str, locals())
 
 def prepend_hash(lines_str):
-    return "\n".join(["#" + line for line in lines_str.split("\n")])
+    return "\n".join([f"#{line}" for line in lines_str.split("\n")])
 
 def find_str(line, target):
     # Find the first : not in parentheses
@@ -114,11 +114,8 @@ def find_str(line, target):
             curly_count += 1
         elif c == "}":
             curly_count -= 1
-        elif c == "\"" or c == "'":
-            if in_string == c:
-                in_string = None
-            else:
-                in_string = c
+        elif c in ["\"", "'"]:
+            in_string = None if in_string == c else c
         elif c == target and paren_count == 0 and bracket_count == 0 and curly_count == 0 and in_string is None:
             return i
     return -1

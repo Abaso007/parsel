@@ -18,22 +18,20 @@ def next_board(board):
     new_board = []
     for i in range(len(board)):
         new_board.append([])
-        for j in range(len(board[i])):
+        for _ in range(len(board[i])):
             new_board[i].append(0)
     # 2) Iterate over the old board and determine the new state of each cell using the rules of the game of life
     for i in range(len(board)):
         for j in range(len(board[i])):
-            # Determine the number of active cells in the neighbourhood
-            live_neighbours = 0
-            for x in range(i-1, i+2):
-                for y in range(j-1, j+2):
-                    # Check that the indices are valid
-                    if x>=0 and y>=0 and x<len(board) and y<len(board[i]):
-                        # Check that the cell is not the current cell
-                        if not (x==i and y==j):
-                            # Check that the cell is active
-                            if board[x][y]==1:
-                                live_neighbours += 1
+            live_neighbours = sum(
+                x >= 0
+                and y >= 0
+                and x < len(board)
+                and y < len(board[i])
+                and (x != i or y != j)
+                and board[x][y] == 1
+                for x, y in product(range(i - 1, i + 2), range(j - 1, j + 2))
+            )
             # Apply the rules of the game of life
             if board[i][j]==1 and live_neighbours==2:
                 new_board[i][j] = 1
@@ -51,10 +49,7 @@ def invert_square_array(arr):
         # For every column in the row
         for col in range(len(arr[row])):
             # Invert the value at the location
-            if arr[row][col] == 0:
-                arr[row][col] = 1
-            else:
-                arr[row][col] = 0
+            arr[row][col] = 1 if arr[row][col] == 0 else 0
     return arr
 
 # Takes a board and returns the next iteration of the game of life, but with all values flipped

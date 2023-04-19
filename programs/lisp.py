@@ -24,11 +24,7 @@ def get_env(parms, args, env=None):
 
 # Get a dictionary mapping math library function names to their functions.
 def get_math():
-    d = {}
-    for name in dir(math):
-        if name[:2] != '__':
-            d[name] = getattr(math, name)
-    return d
+    return {name: getattr(math, name) for name in dir(math) if name[:2] != '__'}
 
 # Get a dictionary mapping operator symbols to their functions: +, -, *, /, >, <, >=, <=, =.
 def get_ops():
@@ -56,7 +52,7 @@ def apply_fn_dict_key(fn_dict_generator, key, args_list):
 def standard_env(includes=['math', 'ops', 'simple_math']):
     env = {'_outer': None}
     if 'math' in includes:
-        env.update(get_math())
+        env |= get_math()
     if 'ops' in includes:
         env.update(get_ops())
     if 'simple_math' in includes:
@@ -65,10 +61,7 @@ def standard_env(includes=['math', 'ops', 'simple_math']):
 
 # Find the value of var in the innermost env where var appears.
 def find(env, var):
-    if var in env:
-        return env[var]
-    else:
-        return find(env['_outer'], var)
+    return env[var] if var in env else find(env['_outer'], var)
 
 # Return find(env, x).
 def string_case(x, env):
@@ -113,9 +106,7 @@ def list_case(x, env):
 
 # Return x
 def not_list_case(x, env):
-    if isinstance(x, list):
-        return None
-    return x
+    return None if isinstance(x, list) else x
 
 # Evaluate an expression in an environment and return the result. Check if x is a list, a string, or neither, and call the corresponding function.
 def eval_exp(x, env):
@@ -198,8 +189,15 @@ assert repr(str(eval_exp(1, {'_outer': None}))) == repr(str(1)) or (eval_exp(1, 
 
 assert repr(str(parse('(1 + (2 * 3))'))) == repr(str([1, '+', [2, '*', 3]])) or (parse('(1 + (2 * 3))') == [1, '+', [2, '*', 3]])
 
-assert repr(str(nested_list_to_str(1))) == repr(str("1")) or (nested_list_to_str(1) == "1")
-assert repr(str(nested_list_to_str([1, '+', [2, '*', 3]]))) == repr(str("(1 + (2 * 3))")) or (nested_list_to_str([1, '+', [2, '*', 3]]) == "(1 + (2 * 3))")
+assert (
+    repr(str(nested_list_to_str(1))) == repr("1")
+    or nested_list_to_str(1) == "1"
+)
+assert (
+    repr(str(nested_list_to_str([1, '+', [2, '*', 3]])))
+    == repr("(1 + (2 * 3))")
+    or nested_list_to_str([1, '+', [2, '*', 3]]) == "(1 + (2 * 3))"
+)
 
 assert repr(str(find({'a':4, '_outer':None}, 'a'))) == repr(str(4)) or (find({'a':4, '_outer':None}, 'a') == 4)
 assert repr(str(find({'_outer':{'a':4, '_outer':None}}, 'a'))) == repr(str(4)) or (find({'_outer':{'a':4, '_outer':None}}, 'a') == 4)
@@ -207,9 +205,16 @@ assert repr(str(find({'a':3, '_outer':{'a':4, '_outer':None}}, 'a'))) == repr(st
 
 assert repr(str(string_case('a', {'a':4, '_outer':None}))) == repr(str(4)) or (string_case('a', {'a':4, '_outer':None}) == 4)
 
-assert repr(str(list_case(['quote', 'a'], {'_outer': None}))) == repr(str('a')) or (list_case(['quote', 'a'], {'_outer': None}) == 'a')
+assert (
+    repr(str(list_case(['quote', 'a'], {'_outer': None}))) == repr('a')
+    or list_case(['quote', 'a'], {'_outer': None}) == 'a'
+)
 assert repr(str(list_case(['if', True, 1, 2], {'_outer': None}))) == repr(str(1)) or (list_case(['if', True, 1, 2], {'_outer': None}) == 1)
-assert repr(str(list_case(['define', 'a', 1], {'_outer': None}))) == repr(str(None)) or (list_case(['define', 'a', 1], {'_outer': None}) == None)
+assert (
+    repr(str(list_case(['define', 'a', 1], {'_outer': None})))
+    == repr(str(None))
+    or list_case(['define', 'a', 1], {'_outer': None}) is None
+)
 
 assert repr(str(not_list_case(1, {}))) == repr(str(1)) or (not_list_case(1, {}) == 1)
 
@@ -224,5 +229,5 @@ assert repr(str(tokenize("1 + (2 * 3)"))) == repr(str(['1', '+', '(', '2', '*', 
 assert repr(str(read_from_tokens(['(', '1', '+', '(', '2', '*', '3', ')', ')']))) == repr(str([1, '+', [2, '*', 3]])) or (read_from_tokens(['(', '1', '+', '(', '2', '*', '3', ')', ')']) == [1, '+', [2, '*', 3]])
 
 assert repr(str(atom("1"))) == repr(str(1)) or (atom("1") == 1)
-assert repr(str(atom("a"))) == repr(str("a")) or (atom("a") == "a")
+assert repr(str(atom("a"))) == repr("a") or atom("a") == "a"
 assert repr(str(atom("1.2"))) == repr(str(1.2)) or (atom("1.2") == 1.2)

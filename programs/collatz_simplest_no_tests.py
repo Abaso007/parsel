@@ -55,7 +55,7 @@ assert base_case(5, [1,2,3,4]) == [1,2,3,4,5], 'base_case should return [1,2,3,4
 assert collatz_recursion(3) == [3, 10, 5, 16, 8, 4, 2, 1]
 assert collatz_recursion(1) == [1], "collatz_recursion is incorrect"
 assert collatz_recursion(1, [1]) == [1, 1]
-assert collatz_recursion(1) == [1], f"collatz_recursion(1) should return [1]"
+assert collatz_recursion(1) == [1], "collatz_recursion(1) should return [1]"
 assert collatz_recursion(5) == [5, 16, 8, 4, 2, 1]
 assert collatz_recursion(2) == [2, 1]
 assert collatz_recursion(9) == [9, 28, 14, 7, 22, 11, 34, 17, 52, 26, 13, 40, 20, 10, 5, 16, 8, 4, 2, 1]

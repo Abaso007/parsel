@@ -22,20 +22,22 @@ def minimum_spanning_tree(cost_matrix):
     # This is a list of the vertices that have been added to the MST
     visited = [0]
     # This is a list of the vertices that have not been added to the MST
-    unvisited = [i for i in range(1, len(cost_matrix))]
+    unvisited = list(range(1, len(cost_matrix)))
     # This is a list of edges that are part of the MST
     edges = []
     # This is the adjacency matrix corresponding to the MST
-    adjacency_matrix = [[0 for i in range(len(cost_matrix))] for j in range(len(cost_matrix))]
-    while len(unvisited) > 0:
+    adjacency_matrix = [
+        [0 for _ in range(len(cost_matrix))] for _ in range(len(cost_matrix))
+    ]
+    while unvisited:
         # Get the index of the minimum edge
         min_edge_index = -1
         min_edge_value = float('inf')
-        for i in range(len(visited)):
-            for j in range(len(unvisited)):
-                if cost_matrix[visited[i]][unvisited[j]] < min_edge_value:
-                    min_edge_index = (visited[i], unvisited[j])
-                    min_edge_value = cost_matrix[visited[i]][unvisited[j]]
+        for item in visited:
+            for item_ in unvisited:
+                if cost_matrix[item][item_] < min_edge_value:
+                    min_edge_index = item, item_
+                    min_edge_value = cost_matrix[item][item_]
         # Add the minimum edge to our MST
         edges.append(min_edge_index)
         # Add the unvisited vertex to the list of visited vertices
@@ -51,13 +53,12 @@ def minimum_spanning_tree(cost_matrix):
 # given a list of lists representing an adjacency matrix, return a list of the nodes connected to the final node. However, if only one node is connected to the final node, return an empty list.
 def final_node_connectors(adjacency_matrix):
     final_node = len(adjacency_matrix) - 1
-    final_node_connectors = []
-    for i in range(len(adjacency_matrix) - 1):
-        if adjacency_matrix[i][final_node] == 1:
-            final_node_connectors.append(i)
-    if len(final_node_connectors) == 1:
-        return []
-    return final_node_connectors
+    final_node_connectors = [
+        i
+        for i in range(len(adjacency_matrix) - 1)
+        if adjacency_matrix[i][final_node] == 1
+    ]
+    return [] if len(final_node_connectors) == 1 else final_node_connectors
 
 # given a matrix representing the cost of building a road between any two cities, and a list representing the cost of building an airport in a city (where any two cities with airports are connected), return a list of the cities that should have airports built in them to minimize the total cost of building roads and airports such that all cities are connected. The list should be sorted in ascending order.
 def select_airport_cities(city_road_cost, city_airport_cost):

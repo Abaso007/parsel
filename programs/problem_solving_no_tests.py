@@ -31,7 +31,7 @@ def minimum_spanning_tree(cost_matrix):
     '''
     # First we need to initialize the graph
     num_vertices = len(cost_matrix)
-    graph = [[0 for i in range(num_vertices)] for j in range(num_vertices)]
+    graph = [[0 for _ in range(num_vertices)] for _ in range(num_vertices)]
     for i in range(num_vertices):
         for j in range(i + 1, num_vertices):
             graph[i][j] = cost_matrix[i][j]
@@ -49,19 +49,20 @@ def minimum_spanning_tree(cost_matrix):
         lowest_cost = float("inf")
         lowest_vertex = None
         lowest_edge = None
-        for vertex in visited:
-            for i in range(num_vertices):
-                if i not in visited and graph[vertex][i] < lowest_cost:
-                    lowest_cost = graph[vertex][i]
-                    lowest_vertex = i
-                    lowest_edge = (vertex, i)
+        for vertex, i in product(visited, range(num_vertices)):
+            if i not in visited and graph[vertex][i] < lowest_cost:
+                lowest_cost = graph[vertex][i]
+                lowest_vertex = i
+                lowest_edge = (vertex, i)
         # Now we can add the lowest cost edge to the tree
         visited.append(lowest_vertex)
         edges.append(lowest_edge)
         total_cost += lowest_cost
 
     # Now we need to return the adjacency matrix of the minimum spanning tree
-    adjacency_matrix = [[0 for i in range(num_vertices)] for j in range(num_vertices)]
+    adjacency_matrix = [
+        [0 for _ in range(num_vertices)] for _ in range(num_vertices)
+    ]
     for edge in edges:
         adjacency_matrix[edge[0]][edge[1]] = 1
         adjacency_matrix[edge[1]][edge[0]] = 1
@@ -70,10 +71,9 @@ def minimum_spanning_tree(cost_matrix):
 
 # given a list of lists representing an adjacency matrix, return a list of the nodes connected to the final node. However, if only one node is connected to the final node, return an empty list.
 def final_node_connectors(adjacency_matrix):
-    final_node_connectors = []
-    for i in range(0, len(adjacency_matrix)):
-        if adjacency_matrix[i][-1] == 1:
-            final_node_connectors.append(i)
+    final_node_connectors = [
+        i for i in range(len(adjacency_matrix)) if adjacency_matrix[i][-1] == 1
+    ]
     if len(final_node_connectors) == 1:
         final_node_connectors = []
     return final_node_connectors

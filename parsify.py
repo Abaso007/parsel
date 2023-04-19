@@ -6,11 +6,10 @@ from consts import CONSTS
 # Used for backtranslation / decompilation
 # Get the names of all the functions defined in the solution
 def get_defs(solution):
-  defined_functions = []
-  for line in solution.split('\n'):
-    if line.startswith(CONSTS["fn_init"]):
-      defined_functions.append(line.split('(')[0].split(' ')[1])
-  return defined_functions
+  return [
+      line.split('(')[0].split(' ')[1] for line in solution.split('\n')
+      if line.startswith(CONSTS["fn_init"])
+  ]
 
 # Used for backtranslation / decompilation
 # Heuristically get the names of the inputs and outputs of each function
@@ -33,7 +32,7 @@ def get_fns(solution, defs, get_rets=False):
       inputs = line.split('(')[1].split(')')[0].split(',')
       fns[cur_fn]['args'] = [inp.strip() for inp in inputs]
       for fn in defs:
-        if fn + "(" in line.split(':', 1)[1]:
+        if f"{fn}(" in line.split(':', 1)[1]:
           fns[fn]['parent'].add(cur_fn)
           fns[cur_fn]['children'].add(fn)
       fns[cur_fn]['implementations'] = [line]
@@ -65,10 +64,10 @@ def get_fns(solution, defs, get_rets=False):
         elif len(rets) == 1:
           fns[cur_fn]['ret'] = ["res"]
         else:
-          fns[cur_fn]['ret'] = ["res" + str(i) for i in range(len(rets))]
-        
+          fns[cur_fn]['ret'] = [f"res{str(i)}" for i in range(len(rets))]
+
       for fn in defs:
-        if fn + "(" in line:
+        if f"{fn}(" in line:
           fns[fn]['parent'].add(cur_fn)
           fns[cur_fn]['children'].add(fn)
 
@@ -95,8 +94,7 @@ def get_fns(solution, defs, get_rets=False):
 
 def to_parsel(solution):
   defined_functions = get_defs(solution)
-  basic_graph = get_fns(solution, defined_functions)
-  return basic_graph
+  return get_fns(solution, defined_functions)
 
 def add_fn_name_and_args(parsel_text, codegen, max_tokens=500):
   parsel_lines = [line.rstrip() for line in parsel_text if line.strip() != ""]
